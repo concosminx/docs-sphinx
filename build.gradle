@@ -1,0 +1,81 @@
+buildscript {
+  repositories{
+    mavenLocal();    
+    maven { url "https://plugins.gradle.org/m2/" }
+    maven { url 'https://repo.maven.apache.org/maven2/' }
+    maven { url 'http://jcenter.bintray.com/'}
+  }
+}
+
+plugins {
+  id "kr.motd.sphinx" version "2.10.1"
+  id "org.hidetake.ssh" version "2.10.1"
+}
+
+apply plugin: 'java'
+
+repositories {
+  maven { url 'https://repo.maven.apache.org/maven2/' }
+}
+
+remotes {
+  remoteServer {
+    host = "$remoteHost"
+    port = Integer.parseInt("$remotePort")
+    user = "$remoteUsername"
+    password="$remotePassword"
+	  knownHosts=allowAnyHosts
+  }
+}
+
+task downloadBinaries {
+  File dirToDownload=new File(getProjectDir(),"bin");
+  if (!dirToDownload.exists()) {
+    dirToDownload.mkdirs()
+
+    ant.get(src:"https://github.com/trustin/sphinx-binary/releases/download/v0.8.2/sphinx.windows-x86_64.exe", dest:new File(dirToDownload,"sphinx.windows-x86_64.exe").absolutePath, httpusecaches: false)
+  }
+}
+
+task showDoc(dependsOn:['downloadBinaries', 'site']) {
+  doFirst {
+    java.net.URI url=(new File(new File(project.buildDir,"sphinx-site"),"index.html")).toURI();
+    java.awt.Desktop.getDesktop().browse(url);    
+  }
+}
+
+sphinx {
+  binaryUrl=new File(project.projectDir,"bin/sphinx.windows-x86_64.exe").toURI().toURL().toString()
+  sourceDirectory = new File(project.projectDir,"sphinx").absolutePath
+  outputDirectory = "${project.buildDir}/sphinx-site"
+}
+
+task archiveDocs(type: Zip,dependsOn:['clean','site']) {
+   from new File(project.buildDir,"sphinx-site").absolutePath
+   archiveName 'docs.zip'
+}
+
+task publishDocs(description:'Publish docs to web server' ,dependsOn:['archiveDocs']){
+  doFirst{
+	  ssh.run {
+		  session(remotes.remoteServer) {
+        execute "rm -rf $remoteDir"
+        execute "mkdir -p $remoteDir"
+        
+        project.logger.lifecycle "Cleanup done..."
+      
+        put from: new File(project.buildDir,'distributions/docs.zip').absolutePath, into: "$remoteDir"
+        //put from: new File(project.projectDir,'publish.conf').absolutePath, into: "/etc/nginx/conf.d/"
+        
+        execute "unzip $remoteDir/docs.zip -d $remoteDir"
+        execute "rm -rf $remoteDir/docs.zip"
+
+        project.logger.lifecycle "Unzip done..."
+
+        //execute "service nginx restart"
+		  }
+	  }
+  }
+}
+
+assemble.dependsOn(['publishDocs'])
