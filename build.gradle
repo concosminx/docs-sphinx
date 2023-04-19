@@ -3,7 +3,7 @@ buildscript {
     mavenLocal();    
     maven { url "https://plugins.gradle.org/m2/" }
     maven { url 'https://repo.maven.apache.org/maven2/' }
-    maven { url 'http://jcenter.bintray.com/'}
+//    maven { url 'http://jcenter.bintray.com/'}
   }
 }
 
@@ -34,7 +34,8 @@ task downloadBinaries {
     dirToDownload.mkdirs()
 
     ant.get(src:"https://github.com/trustin/sphinx-binary/releases/download/v0.8.2/sphinx.windows-x86_64.exe", dest:new File(dirToDownload,"sphinx.windows-x86_64.exe").absolutePath, httpusecaches: false)
-  }
+    ant.get(src:"https://github.com/trustin/sphinx-binary/releases/download/v0.8.2/sphinx.linux-x86_64", dest:new File(dirToDownload,"sphinx.linux-x86_64").absolutePath, httpusecaches: false)
+ }
 }
 
 task showDoc(dependsOn:['downloadBinaries', 'site']) {
@@ -45,7 +46,8 @@ task showDoc(dependsOn:['downloadBinaries', 'site']) {
 }
 
 sphinx {
-  binaryUrl=new File(project.projectDir,"bin/sphinx.windows-x86_64.exe").toURI().toURL().toString()
+  //binaryUrl=new File(project.projectDir,"bin/sphinx.windows-x86_64.exe").toURI().toURL().toString()
+  binaryUrl=new File(project.projectDir,"bin/sphinx.linux-x86_64").toURI().toURL().toString()
   sourceDirectory = new File(project.projectDir,"sphinx").absolutePath
   outputDirectory = "${project.buildDir}/sphinx-site"
 }
