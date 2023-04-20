@@ -27,4 +27,4 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew clean site
     - name: Show content
-      run: ls -a ./build
+      run: ls -a ./build/sphinx-site
