@@ -1,9 +1,7 @@
-name: Publish content to github-pages
+name: Publish content to pages
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
     branches: [ "main" ]
   workflow_dispatch:
 
@@ -28,3 +26,5 @@ jobs:
           chmod +x ./bin/sphinx.linux-x86_64
     - name: Build with Gradle
       run: ./gradlew clean site
+    - name: Show content
+      run: ls -a ./build
