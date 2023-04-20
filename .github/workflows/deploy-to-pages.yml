@@ -22,5 +22,9 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
+    - name: Download Sphinx Binaries
+      run: |
+          ./gradlew downloadBinaries
+          chmod +x ./bin/sphinx.linux-x86_64
     - name: Build with Gradle
       run: ./gradlew clean site
